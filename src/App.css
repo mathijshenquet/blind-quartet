@@ -1,0 +1,61 @@
+
+ul{
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+}
+
+li{
+    margin: 0.3em 0;
+}
+
+h3 {
+    margin: 0;
+    padding: 0;
+}
+
+.placeholder{
+    font-style: italic;
+    opacity: 0.6;
+}
+
+.placeholder:hover{
+    font-style: italic;
+    opacity: 1;
+}
+
+.category{
+    display: block;
+    border-radius: 0.5em;
+    border: 1px solid;
+    padding: 0.5em;
+    margin: 1em;
+}
+
+#game{
+    display: grid;
+    grid-template-columns: auto auto;
+    grid-template-rows: auto auto;
+    grid-template-areas: "players actions" "categories log";
+    grid-column-gap: 1em;
+}
+
+#players{
+    grid-area: players;
+    margin: 1.5em;
+}
+
+#categories{
+    grid-area: categories;
+}
+
+
+#log{
+    grid-area: log;
+    margin: 1.5em;
+}
+
+#actions{
+    grid-area: actions;
+    margin: 1.5em;
+}
