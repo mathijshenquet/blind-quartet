@@ -1,8 +1,9 @@
 import {Player} from "./player";
 import {Card} from "./card";
-import {Result, Game} from "./game";
+import {Game} from "./game";
 import * as React from "react";
 import {Stateful} from "./stateful";
+import {Result} from "./result";
 
 interface CategoryState {
     reserved: number;

@@ -4,6 +4,10 @@ import {Game} from "./model/game";
 import {Card} from "./model/card";
 import {Player} from "./model/player";
 import {Category} from "./model/category";
+import {move_ask} from "./model/moves";
+import {move_respond, try_respond} from "./model/moves/respond";
+import {move_quartet} from "./model/moves/quartet";
+import {try_ask} from "./model/moves/ask";
 
 
 const g = new Game(2);
@@ -31,18 +35,18 @@ class App extends React.Component<any, AppState> {
     }
 
     executeAsk(target: Player, card: Card){
-        g.move_ask(target, card);
+        move_ask(g, target, card);
         this.setState(g.next_action());
     }
 
     executeResponse(did_have: boolean){
-        g.move_respond(did_have);
+        move_respond(g, did_have);
         this.setState({target: null, card: null});
         this.setState(g.next_action());
     }
 
     executeQuartet(category: Category){
-        g.move_quartet(category);
+        move_quartet(g, category);
         this.setState({category: null});
         this.setState(g.next_action());
     }
@@ -85,7 +89,7 @@ class App extends React.Component<any, AppState> {
         let color = colors[category.id];
         let state = this.state;
 
-        let consistent = g.try_ask_cat(category);
+        let consistent = try_ask(g, category);
         const select_button = state.type == "move" && state.target == null && state.category == null && state.card == null
             ? <button className="select" disabled={!consistent.possible} title={!consistent.possible ? consistent.reason : undefined} onClick={() => this.setState({category})}>Quartet</button>
             : "";
@@ -149,14 +153,14 @@ class App extends React.Component<any, AppState> {
             parts.push(<span>Does player {target.show()} have {card.show()} in category {card.category.show()}?</span>);
 
             {
-                let consistent = g.try_respond(true);
+                let consistent = try_respond(g, true);
                 parts.push(<button disabled={!consistent.possible}
                                    title={!consistent.possible ? consistent.reason : undefined}
                                    onClick={this.executeResponse.bind(this, true)}>Yes</button>);
             }
 
             {
-                let consistent = g.try_respond(false);
+                let consistent = try_respond(g, false);
                 parts.push(<button disabled={!consistent.possible}
                                    title={!consistent.possible ? consistent.reason : undefined}
                                    onClick={this.executeResponse.bind(this, false)}>No</button>);

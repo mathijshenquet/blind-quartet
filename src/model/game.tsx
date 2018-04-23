@@ -1,23 +1,7 @@
 import {PlayerPattern, Player} from "./player";
-import {Card} from "./card";
 import {Move} from "./moves";
 import {Category} from "./category";
-
-export interface Possible {
-    possible: true
-}
-
-export interface Impossible {
-    possible: false,
-    reason: string
-}
-
-export type Result = Possible | Impossible;
-
-function throw_reason(result: Result) {
-    if(!result.possible)
-        throw new Error(result.reason);
-}
+import {Result} from "./result";
 
 export class Game{
     players: Array<Player>;
@@ -104,109 +88,6 @@ export class Game{
             return {type: "response", player: last_move.player};
         }
         return {type: "move", player: this.turn};
-    }
-
-    /// move ask
-    try_ask_cat(category: Category): Result {
-        let player = this.turn;
-
-        if(category.completed){
-            return {possible: false, reason: "Is already a quartet"};
-        }
-
-        if(player.playing_in(category)) {
-            return {possible: true};
-        }
-
-        if(player.free_cards == 0){
-            return {possible: false, reason: "You have no more free cards"}
-        }
-
-        if(!category.can_have_player(player)){
-            return {possible: false, reason: "There are no more free cards in this category"}
-        }
-
-        return {possible: true}
-    }
-
-    move_ask(target: Player, card: Card){
-        throw_reason(this.try_ask_cat(card.category));
-
-        let category = card.category;
-        let player = this.turn;
-        this.log_move({type: "ask", player, target, card});
-
-        category.reserve(player);
-        card.exclude(player);
-    }
-
-    try_quartet(category: Category): Result {
-        let player = this.turn;
-
-        let m = category.multiplicity(player);
-        if(m + player.free_cards < 4){
-            return {possible: false, reason: "You cannot have enough cards"};
-        }
-
-        if(!category.is_exclusive(player)){
-            return {possible: false, reason: "Someone else has cards in this category"};
-        }
-
-        return {possible: true};
-    }
-
-    move_quartet(category: Category){
-        throw_reason(this.try_quartet(category));
-        let player = this.turn;
-        category.cards.forEach((card) => player.claim_ownership(card));
-        category.completed = true;
-        player.hand_cards -= 4;
-        player.quartets += 1;
-    }
-
-    // response move
-    try_respond(did_have: boolean): Result {
-        let last_move = this.last_move;
-        if(!last_move){
-            return {possible: false, reason: "Nothing to respond to"};
-        }
-
-        if(last_move.type != "ask"){
-            return {possible: false, reason: "Last move isn't an ask"};
-        }
-
-        let target = last_move.target;
-
-        // reason counterfactually
-        this.push_state();
-        let card = last_move.card;
-        if(did_have) {
-            target.claim_ownership(card);
-        }else{
-            card.exclude(target);
-        }
-        let consistency = this.check_consistent();
-        this.pop_state();
-
-        return consistency;
-    }
-
-    move_respond(did_have: boolean){
-        if(this.last_move == null || this.last_move.type != "ask"){
-            throw new Error();
-        }
-
-        throw_reason(this.try_respond(did_have));
-
-        let {player, card, target} = this.last_move;
-        this.log_move({type: "response", player: target, did_have});
-        if(did_have) {
-            target.claim_ownership(card);
-            card.transfer(player);
-        }else{
-            card.exclude(target);
-            this.next_player();
-        }
     }
 
     empty_pattern(): PlayerPattern {

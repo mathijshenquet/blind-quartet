@@ -1,8 +1,9 @@
-import {Result, Game} from "./game";
+import {Game} from "./game";
 import {Category} from "./category";
 import {PlayerPattern} from "./player";
 import {Card} from "./card";
 import {Stateful} from "./stateful";
+import {Result} from "./result";
 
 export type PlayerPattern = number;
 

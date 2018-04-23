@@ -1,8 +1,9 @@
-import {Result, Game} from "./game";
+import {Game} from "./game";
 import * as React from "react";
 import {Category} from "./category";
 import {Player, PlayerPattern} from "./player";
 import {Stateful} from "./stateful";
+import {Result} from "./result";
 
 interface CardState {
     owner: Player | null;
