@@ -1,6 +1,7 @@
 
 /// Moves
-import {Card, Player} from "./state";
+import {Card} from "./card";
+import {Player} from "./player";
 import {Category} from "./category";
 
 export interface MoveAsk{

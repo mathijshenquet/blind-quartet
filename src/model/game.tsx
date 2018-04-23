@@ -1,18 +1,18 @@
-import * as React from "react";
-import {Card, PlayerPattern, Player} from "./state";
+import {PlayerPattern, Player} from "./player";
+import {Card} from "./card";
 import {Move} from "./moves";
 import {Category} from "./category";
 
-interface Possible {
+export interface Possible {
     possible: true
 }
 
-interface Impossible {
+export interface Impossible {
     possible: false,
     reason: string
 }
 
-type Result = Possible | Impossible;
+export type Result = Possible | Impossible;
 
 function throw_reason(result: Result) {
     if(!result.possible)
@@ -80,13 +80,25 @@ export class Game{
         }
     }
 
-    check_consistent(): boolean{
-        this.update();
-        return this.categories.every((cat) => cat.consistent())
-            && this.players.every((player) => player.consistent());
+    check_consistent(): Result {
+        let consistency: Result = {possible: true};
+        this.categories.every((cat) => {
+            consistency = cat.consistent();
+            return consistency.possible;
+        });
+        if(!consistency.possible)
+            return consistency;
+
+        this.players.every((player) => {
+            consistency = player.consistent();
+            return consistency.possible;
+        });
+
+        return consistency;
     }
 
     next_action(): {type: "move" | "response", player: Player} {
+        //this.update();
         let last_move = this.last_move;
         if(last_move && last_move.type == "ask"){
             return {type: "response", player: last_move.player};
@@ -95,13 +107,11 @@ export class Game{
     }
 
     /// move ask
-    try_ask_cat(player: Player, category: Category): Result {
-        if(player != this.next_action().player || this.next_action().type != "move"){
-            return {possible: false, reason: "Not your turn"};
-        }
+    try_ask_cat(category: Category): Result {
+        let player = this.turn;
 
         if(category.completed){
-            return {possible: false, reason: "You own the quartet already"};
+            return {possible: false, reason: "Is already a quartet"};
         }
 
         if(player.playing_in(category)) {
@@ -120,22 +130,42 @@ export class Game{
     }
 
     move_ask(target: Player, card: Card){
+        throw_reason(this.try_ask_cat(card.category));
+
         let category = card.category;
         let player = this.turn;
-        throw_reason(this.try_ask_cat(player, card.category));
-
         this.log_move({type: "ask", player, target, card});
 
-        // claim a place in the category if we are not playing in it
-        if(!player.playing_in(category)) {
-            player.claim(category);
-        }
-
+        category.reserve(player);
         card.exclude(player);
     }
 
+    try_quartet(category: Category): Result {
+        let player = this.turn;
+
+        let m = category.multiplicity(player);
+        if(m + player.free_cards < 4){
+            return {possible: false, reason: "You cannot have enough cards"};
+        }
+
+        if(!category.is_exclusive(player)){
+            return {possible: false, reason: "Someone else has cards in this category"};
+        }
+
+        return {possible: true};
+    }
+
+    move_quartet(category: Category){
+        throw_reason(this.try_quartet(category));
+        let player = this.turn;
+        category.cards.forEach((card) => player.claim_ownership(card));
+        category.completed = true;
+        player.hand_cards -= 4;
+        player.quartets += 1;
+    }
+
     // response move
-    try_respond(target: Player, did_have: boolean): Result {
+    try_respond(did_have: boolean): Result {
         let last_move = this.last_move;
         if(!last_move){
             return {possible: false, reason: "Nothing to respond to"};
@@ -145,40 +175,20 @@ export class Game{
             return {possible: false, reason: "Last move isn't an ask"};
         }
 
-        if(last_move.target != target){
-            return {possible: false, reason: "You should not respond"};
-        }
+        let target = last_move.target;
 
         // reason counterfactually
         this.push_state();
         let card = last_move.card;
         if(did_have) {
-            target.own(card);
+            target.claim_ownership(card);
         }else{
             card.exclude(target);
         }
         let consistency = this.check_consistent();
         this.pop_state();
 
-        if(consistency){
-            return {possible: true};
-        }else{
-            return {possible: false, reason: "Inconsistent"}
-        }
-    }
-
-    try_exclude(player: Player, card: Card): Result {
-        // reason counterfactually
-        this.push_state();
-        card.exclude(player);
-        let consistency = this.check_consistent();
-        this.pop_state();
-
-        if(consistency){
-            return {possible: true};
-        }else{
-            return {possible: false, reason: "Inconsistent"}
-        }
+        return consistency;
     }
 
     move_respond(did_have: boolean){
@@ -186,15 +196,13 @@ export class Game{
             throw new Error();
         }
 
-        let target = this.last_move.target;
-        throw_reason(this.try_respond(target, did_have));
+        throw_reason(this.try_respond(did_have));
 
-        //let player = this.last_move.player;
-        let card = this.last_move.card;
-
+        let {player, card, target} = this.last_move;
         this.log_move({type: "response", player: target, did_have});
         if(did_have) {
-            target.own(card);
+            target.claim_ownership(card);
+            card.transfer(player);
         }else{
             card.exclude(target);
             this.next_player();
@@ -204,20 +212,4 @@ export class Game{
     empty_pattern(): PlayerPattern {
         return ~((1 << this.players.length) - 1);
     }
-
-    render_players(){
-        return <div id="players">
-            <h3>Players</h3>
-            <ul>{this.players.map((player) => <li>{player.render()}</li>)}</ul>
-        </div>;
-    }
-
-    render_categories() {
-        return <div id="categories">{this.categories.map((player) => player.render())}</div>;
-    }
-
-    render_log() {
-        return <div id="log">Log</div>;
-    }
-
 }

@@ -1,4 +1,8 @@
 
+body{
+    font-size: 14px;
+}
+
 ul{
     padding: 0;
     margin: 0;
@@ -7,6 +11,7 @@ ul{
 
 li{
     margin: 0.3em 0;
+    clear: both;
 }
 
 h3 {
@@ -26,17 +31,26 @@ h3 {
 
 .category{
     display: block;
-    border-radius: 0.5em;
-    border: 1px solid;
-    padding: 0.5em;
-    margin: 1em;
+    border-left: 3px solid;
+    padding: 0 0.5em;
+    margin: 0.8em;
+}
+
+.select{
+    float: right;
+}
+
+.info{
+    color: black;
+    font-size: 11px;
+    font-weight: normal;
 }
 
 #game{
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: 30em auto;
     grid-template-rows: auto auto;
-    grid-template-areas: "players actions" "categories log";
+    grid-template-areas: "players actions" "categories actions";
     grid-column-gap: 1em;
 }
 
