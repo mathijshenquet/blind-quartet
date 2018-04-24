@@ -9,13 +9,15 @@ export class Stateful<S>{
     }
 
     pop_state(){
-        let prev = this.previousStates.pop();
-        if(prev != undefined) {
-            this.state = prev;
+        let state = this.previousStates.pop();
+        if(state != null) {
+            this.state = state;
+        }else{
+            throw new Error();
         }
     }
 
     push_state(){
-        this.previousStates.push(this.state);
+        this.previousStates.push(Object.assign({}, this.state));
     }
 }

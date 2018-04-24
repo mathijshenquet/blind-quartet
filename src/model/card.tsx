@@ -7,7 +7,8 @@ import {Result} from "./result";
 
 interface CardState {
     owner: Player | null;
-    _excluded: PlayerPattern;
+    excluded: PlayerPattern;
+    degree: number;
 }
 
 export class Card extends Stateful<CardState>{
@@ -17,47 +18,33 @@ export class Card extends Stateful<CardState>{
     game: Game;
 
     constructor(category: Category, id: number){
-        super({_excluded: category.game.empty_pattern(), owner: null});
+        super({excluded: category.game.empty_pattern(), owner: null, degree: category.game.length});
 
         this.category = category;
         this.game = category.game;
         this.id = id;
     }
 
-    /*
-    calculate_owner() {
-        console.log("calculate.owner");
-
-        for(let i = 0; i < this.game.players.length; i++){
-            if((~this._excluded) == (1 << i)){
-                let player = this.game.get_player(i);
-
-                if(this.owner != player) {
-                    // obtain a card by exclusion
-                    player.claim_ownership(this);
-                }
-                return;
-            }
-        }
+    get degree(): number{
+        return this.state.degree;
     }
-    */
 
-
+    domain(): Array<Player> {
+        return this.game.players.filter((player) => !this.is_excluded(player));
+    }
 
     /***
      * exclude a player from this card, return true if not yet included
      */
-    exclude(player: Player): boolean{
+    exclude(player: Player){
         if(!this.is_excluded(player)){ // isnt set
-            this.state._excluded |= 1 << player.id;
-            console.log("exclude", this, player);
-            return true;
+            this.state.excluded |= 1 << player.id;
+            this.state.degree -= 1;
         }
-        return false;
     }
 
     is_excluded(player: Player): boolean{
-        return player.is_in(this.state._excluded);
+        return player.is_in(this.state.excluded);
     }
 
     get_excluded(): Array<Player> {
@@ -71,11 +58,20 @@ export class Card extends Stateful<CardState>{
         this.state.owner = value;
 
         if(value == null) throw new Error();
-        this.state._excluded = ~value.bit_pattern();
+        this.state.excluded = ~value.bit_pattern();
+        this.state.degree = 1;
+    }
+
+    assign(player: Player){
+        if(this.owner != null || this.owner == this) return;
+
+        this.category.reserve(player);
+        this.owner = player;
+        this.category.release(player); // now that we have a concrete card, we can release our reserved generic card
     }
 
     transfer(player: Player){
-        if(this.owner == null) throw Error();
+        if(this.owner == null || this.owner == player) throw Error();
 
         this.owner.hand_cards -= 1;
         this.owner = player;
@@ -87,8 +83,7 @@ export class Card extends Stateful<CardState>{
     }
 
     consistent(): Result {
-        if(this.state._excluded == -1){
-            console.log("inconsistent", "Card get_excluded by every player");
+        if(this.state.excluded == -1){
             return {possible: false, reason: "Card get_excluded by every player"};
         }else{
             return {possible: true};
@@ -97,5 +92,9 @@ export class Card extends Stateful<CardState>{
 
     show(){
         return this.name || <span className="placeholder">Card #{this.id+1}</span>;
+    }
+
+    print() {
+        return "cat#"+(this.category.id+1)+" card#"+(this.id+1);
     }
 }

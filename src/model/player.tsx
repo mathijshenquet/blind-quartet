@@ -1,9 +1,10 @@
 import {Game} from "./game";
 import {Category} from "./category";
 import {PlayerPattern} from "./player";
-import {Card} from "./card";
 import {Stateful} from "./stateful";
 import {Result} from "./result";
+import * as React from "react";
+import App from "../App";
 
 export type PlayerPattern = number;
 
@@ -17,11 +18,14 @@ export class Player extends Stateful<PlayerState> {
     id: number;
     name: string;
     game: Game;
+    modifying: boolean;
 
     constructor(id: number, game: Game){
-        super({free_cards: 4, hand_cards: 4, quartets: 4});
+        super({free_cards: 4, hand_cards: 4, quartets: 0});
 
+        this.id = id;
         this.game = game;
+        this.modifying = false;
     }
 
 
@@ -55,6 +59,22 @@ export class Player extends Stateful<PlayerState> {
 
     set free_cards(value: number) {
         this.state.free_cards = value;
+        this.try_exclude_other();
+    }
+
+    // exclude ourselves from all cards we dont own or who'se category we play in
+    try_exclude_other(){
+        if(this.free_cards != 0)
+            return;
+
+        this.game.categories.forEach((category) => {
+            if(category.is_reserved(this))
+                return;
+
+            category.cards.forEach((card) => {
+                if(card.owner != this) card.exclude(this);
+            });
+        });
     }
 
     consistent(): Result {
@@ -77,32 +97,32 @@ export class Player extends Stateful<PlayerState> {
         return false;
     }
 
-    update(): boolean {
-        let updated = false;
-        if(this.free_cards == 0){
-            this.game.categories.forEach((category) => {
-                if(category.multiplicity(this) == 0){
-                    if(category.exclude_all(this)) {
-                        updated = true;
-                    }
-                }
-            });
+    show(app: App | null): any {
+        if(this.modifying && app != null){
+            return <input type="text" value={this.name} onChange={(event) => {
+                this.name = event.target.value;
+                app.forceUpdate();
+            }} onBlur={() => {
+                this.modifying = false;
+                app.forceUpdate();
+            }} />
         }
-        return updated;
+
+        let inner = this.name || <span className="placeholder">Player #{this.id + 1}</span>;
+        if(app == null){
+            return inner;
+        }
+
+        return <span onClick={() => {
+            this.modifying = true;
+            app.forceUpdate();
+        }}>{inner}</span>;
     }
 
-    claim_ownership(card: Card) {
-        if(card.owner != null || card.owner == this) return false;
-
-        console.log("claim_ownership", this, card);
-
-        card.category.reserve(this);
-        card.owner = this;
-        card.category.release(this); // now that we have a concrete card, we can release our reserved generic card
-        return true;
-    }
-
-    show(): string {
-        return this.name || "Player #"+(1+this.id);
+    render_multiplicity(category: Category) {
+        let count = category.multiplicity(this);
+        if(count == 0) return null;
+        if(count == 1) return <span className="count">{this.show(null)}</span>;
+        return <span className="count">{count}x{this.show(null)}</span>;
     }
 }

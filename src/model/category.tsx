@@ -58,6 +58,7 @@ export class Category extends Stateful<CategoryState> {
 
     release(player: Player){
         this.state.reserved &= ~player.bit_pattern();
+        player.try_exclude_other();
     }
 
     consistent(): Result {
@@ -73,7 +74,6 @@ export class Category extends Stateful<CategoryState> {
         });
 
         if(!consistent.possible) {
-            console.log("category#consistent", "inconsistent", consistent);
             return consistent;
         }
 
@@ -84,7 +84,7 @@ export class Category extends Stateful<CategoryState> {
 
             unowned -= 1;
             if(unowned < 0) {
-                consistent = {possible: false, reason: "Not enought cards in category"};
+                consistent = {possible: false, reason: "Not enough cards in category"};
                 return false;
             }
 
@@ -99,29 +99,9 @@ export class Category extends Stateful<CategoryState> {
         return consistent;
     }
 
-    exclude_all(player: Player){
-        return this.cards.some((card) =>
-            card.exclude(player)
-        )
-    }
-
     can_have_player(player: Player): boolean {
         return this.cards.some((card) => card.can_be_claimed_by(player));
     }
-
-    update() {
-        return this.game.players.every((player) => {
-            if(!this.is_reserved(player))
-                return false;
-
-            let card = this.cards.find((card) => card.can_be_claimed_by(player));
-            if(card == null)
-                return false;
-
-            return player.claim_ownership(card);
-        });
-    }
-
 
     show() {
         return this.name || <span className="placeholder">Category #{1+this.id}</span>;

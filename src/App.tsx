@@ -4,11 +4,7 @@ import {Game} from "./model/game";
 import {Card} from "./model/card";
 import {Player} from "./model/player";
 import {Category} from "./model/category";
-import {move_ask} from "./model/moves";
-import {move_respond, try_respond} from "./model/moves/respond";
-import {move_quartet} from "./model/moves/quartet";
-import {try_ask} from "./model/moves/ask";
-
+import {MoveAsk, MoveButton, MoveQuartet, MoveResponse} from "./moves";
 
 const g = new Game(2);
 
@@ -22,8 +18,8 @@ interface AppState {
     card: null | Card;
 }
 
-class App extends React.Component<any, AppState> {
-    constructor(props: any){
+class App extends React.Component<{}, AppState> {
+    constructor(props: {}){
         super(props);
 
         let state: any = g.next_action();
@@ -34,25 +30,14 @@ class App extends React.Component<any, AppState> {
         this.state = state;
     }
 
-    executeAsk(target: Player, card: Card){
-        move_ask(g, target, card);
-        this.setState(g.next_action());
-    }
-
-    executeResponse(did_have: boolean){
-        move_respond(g, did_have);
-        this.setState({target: null, card: null});
-        this.setState(g.next_action());
-    }
-
-    executeQuartet(category: Category){
-        move_quartet(g, category);
-        this.setState({category: null});
+    private tick(stateUpdate: any) {
+        this.setState(stateUpdate);
         this.setState(g.next_action());
     }
 
     public render() {
-        console.log(g);
+        console.log("render", g);
+
         return <div id="game">
             {this.render_players()}
             {this.render_categories()}
@@ -75,7 +60,7 @@ class App extends React.Component<any, AppState> {
             : "";
 
         return <li>
-            <span className={player==this.state.player ? "turn" : ""}>{player.show()}</span>&nbsp;
+            <span className={player==this.state.player ? "turn" : ""}>{player.show(this)}</span>&nbsp;
             (free: {player.free_cards}, hand: {player.hand_cards}, quartets: {player.quartets})&nbsp;
             {select_button}
         </li>;
@@ -89,19 +74,17 @@ class App extends React.Component<any, AppState> {
         let color = colors[category.id];
         let state = this.state;
 
-        let consistent = try_ask(g, category);
+        let quartet = new MoveQuartet(state.player, category);
+        let consistent = quartet.try();
         const select_button = state.type == "move" && state.target == null && state.category == null && state.card == null
             ? <button className="select" disabled={!consistent.possible} title={!consistent.possible ? consistent.reason : undefined} onClick={() => this.setState({category})}>Quartet</button>
             : "";
 
         let player_counts = g.players
-            .map((player) => {
-                return {player, count: category.multiplicity(player)};
-            })
-            .filter(({count}) => count > 0)
-            .map(({player, count}) => count == 1 ? player.show() : count+"x"+player.show());
+            .map((player) => player.render_multiplicity(category))
+            .filter((m) => m != null);
 
-        let multiplicities = player_counts.length > 0 ? <span className="info"> + {player_counts.join(", ")}</span> : undefined;
+        let multiplicities = player_counts.length > 0 ? <span className="info"> + {player_counts}</span> : undefined;
 
         return <div style={{borderColor: color}} className="category">
             <h3 style={{color}}>{category.show()} {multiplicities} {select_button}</h3>
@@ -114,19 +97,20 @@ class App extends React.Component<any, AppState> {
     render_card(card: Card){
         let state = this.state;
 
+        let consistent = MoveAsk.try_card(this.state.player, card);
         const select_button = state.type == "move" && state.category == null && state.card == null
-            ? <button className="select" onClick={() => this.setState({card})}>Select</button>
+            ? <button className="select" disabled={!consistent.possible} title={!consistent.possible ? consistent.reason : undefined} onClick={() => this.setState({card})}>Select</button>
             : "";
 
         let excluded, owner;
 
         if(card.owner == null) {
-            const excluded_list = card.get_excluded().map((player) => player.show());
+            const excluded_list = card.get_excluded().map((player) => player.show(this));
             if (excluded_list.length > 0) {
                 excluded = <span className="info">- {excluded_list.join(", ")}</span>;
             }
         }else{
-            owner = <span className="info">+ {card.owner.show()}</span>;
+            owner = <span className="info">+ {card.owner.show(this)}</span>;
         }
 
         return <span>{card.show()} {excluded} {owner} {select_button}</span>;
@@ -135,66 +119,74 @@ class App extends React.Component<any, AppState> {
     render_actions(){
         return <div id="actions">
             <h2>Actions</h2>
-            <ul>
-                <li>Log...</li>
-                <li className="current">{this.render_current_move()}</li>
-            </ul>
+            <table id="log">
+                <tr>
+                    <th>Player</th>
+                    <th>Action</th>
+                </tr>
+                {this.render_log()}
+                <tr className="current">
+                    <td>{this.state.player.show(this)}</td>
+                    <td>{this.render_current_move()}</td>
+                </tr>
+            </table>
         </div>;
     }
 
+    render_log() {
+        return g.moves.map((move) => <tr>
+            <td>{move.player.show(this)}</td>
+            <td>{move.render()}</td>
+        </tr>)
+    }
+
     render_current_move(){
-        let {category, target, card, player} = this.state;
+        let {category, target, player, card} = this.state;
 
         if(this.state.type == "response"){
             if(target == null || card == null) throw new Error();
 
-            let parts = [<span>{target.show()} replies:</span>];
+            let parts = [<span>replies: </span>];
 
-            parts.push(<span>Does player {target.show()} have {card.show()} in category {card.category.show()}?</span>);
+            parts.push(<MoveButton move={new MoveResponse(g, target, card,true)}
+                                   after={() => this.tick({target: null, card: null})}>Yes</MoveButton>);
 
-            {
-                let consistent = try_respond(g, true);
-                parts.push(<button disabled={!consistent.possible}
-                                   title={!consistent.possible ? consistent.reason : undefined}
-                                   onClick={this.executeResponse.bind(this, true)}>Yes</button>);
-            }
-
-            {
-                let consistent = try_respond(g, false);
-                parts.push(<button disabled={!consistent.possible}
-                                   title={!consistent.possible ? consistent.reason : undefined}
-                                   onClick={this.executeResponse.bind(this, false)}>No</button>);
-            }
+            parts.push(<MoveButton move={new MoveResponse(g, target, card,false)}
+                                   after={() => this.tick({target: null, card: null})}>No</MoveButton>);
 
             return parts;
         }else{
             if(target == null && card == null && category == null){
-                return [
-                    <span>It's {player.show()}'s turn</span>,
-                    <span className="help">Pick a target and ask for a card, or proclaim a quartet</span>
-                ]
+                return <span className="help">Pick a target and ask for a card, or proclaim a quartet</span>;
             }
 
             let parts = [];
-            parts.push(<button onClick={() => this.setState({category: null, target: null, card: null})}>Cancel</button>);
 
             if(category != null){
                 parts.push(<span>Proclaim quartet of {category.show()}</span>);
-                parts.push(<button onClick={this.executeQuartet.bind(this, category)}>Execute</button>);
-                return parts;
+
+                parts.push(<MoveButton move={new MoveQuartet(player, category)}
+                                       after={() => this.tick({category: null})}>Execute</MoveButton>);
+
+            }else {
+                if (target != null) parts.push(<span>from {target.show(this)}</span>);
+                if (card != null){
+                    parts.push(" ");
+                    parts.push(<span>ask {card.show()}</span>);
+                }
+                parts.push("? ");
+
+                if (target != null && card != null) {
+                    parts.push(<MoveButton move={new MoveAsk(player, target, card)}
+                                           after={() => this.tick({category: null})}>Execute</MoveButton>);
+                }
             }
 
-            if(target != null) parts.push(<span>from {target.show()}</span>);
-
-            if(card != null) parts.push(<span>ask {card.show()}</span>);
-
-            if(target != null && card != null){
-                parts.push(<button onClick={this.executeAsk.bind(this, target, card)}>Execute</button>);
-            }
-
+            parts.push(<button onClick={() => this.setState({category: null, target: null, card: null})}>Cancel</button>);
             return parts;
         }
     }
+
 }
 
 export default App;

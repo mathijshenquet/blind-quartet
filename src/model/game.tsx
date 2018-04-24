@@ -1,7 +1,9 @@
 import {PlayerPattern, Player} from "./player";
-import {Move} from "./moves";
+import {Move} from "../moves";
 import {Category} from "./category";
 import {Result} from "./result";
+import {Card} from "./card";
+import {MoveAsk} from "../moves/ask";
 
 export class Game{
     players: Array<Player>;
@@ -10,10 +12,13 @@ export class Game{
     moves: Array<Move>;
     last_move?: Move;
     turn: Player;
+    turns: Array<Player>;
+    length: number;
 
     constructor(player_count: number){
         this.players = [];
         this.categories = [];
+        this.length = player_count;
         for(let player_id = 0; player_id < player_count; player_id++){
             this.players.push(new Player(player_id, this));
         }
@@ -24,6 +29,7 @@ export class Game{
 
         this.moves = [];
         this.turn = this.get_player(0);
+        this.turns = [];
     }
 
     get_player(id: number): Player{
@@ -42,12 +48,23 @@ export class Game{
     /// manage state
     push_state(){
         this.players.forEach((player) => player.push_state());
-        this.categories.forEach((category) => category.push_state());
+        this.categories.forEach((category) => {
+            category.push_state();
+            category.cards.forEach((card) => card.push_state());
+        });
+        this.turns.push(this.turn);
     }
 
     pop_state(){
         this.players.forEach((player) => player.pop_state());
-        this.categories.forEach((category) => category.pop_state());
+        this.categories.forEach((category) => {
+            category.pop_state();
+            category.cards.forEach((card) => card.pop_state());
+        });
+        let prev = this.turns.pop();
+        if(prev != null){
+            this.turn = prev;
+        }
     }
 
     log_move(move: Move){
@@ -56,41 +73,75 @@ export class Game{
         this.last_move = move;
     }
 
-    update(){
-        let updated = true;
-        while(updated){
-            updated = this.categories.some((cat) => cat.update()) ||
-                      this.players.some((player) => player.update());
-        }
-    }
-
-    check_consistent(): Result {
-        let consistency: Result = {possible: true};
-        this.categories.every((cat) => {
-            consistency = cat.consistent();
-            return consistency.possible;
-        });
-        if(!consistency.possible)
-            return consistency;
-
-        this.players.every((player) => {
-            consistency = player.consistent();
-            return consistency.possible;
-        });
-
-        return consistency;
-    }
-
     next_action(): {type: "move" | "response", player: Player} {
-        //this.update();
+        this.consistent();
+
         let last_move = this.last_move;
-        if(last_move && last_move.type == "ask"){
-            return {type: "response", player: last_move.player};
+        if(last_move && last_move instanceof MoveAsk){
+            return {type: "response", player: last_move.target};
         }
         return {type: "move", player: this.turn};
     }
 
     empty_pattern(): PlayerPattern {
         return ~((1 << this.players.length) - 1);
+    }
+
+    solve_step(): boolean {
+        if(this.players.some((player) => {
+            if(player.free_cards == 0)
+                player.try_exclude_other();
+
+            return player.free_cards < 0
+        })){
+            return false;
+        }
+
+        let most_constrained: Card | null = null;
+        this.categories.forEach((category) => {
+            category.cards.forEach((card) => {
+                if(card.owner != null && card.degree == 1) return;
+
+                if(most_constrained == null) {
+                    most_constrained = card;
+                }else if(most_constrained.degree > card.degree){
+                    most_constrained = card;
+                }
+            })
+        });
+
+        // is solvable!
+        if(most_constrained == null) return true;
+
+        let card: Card = most_constrained;
+        let degree = card.degree;
+
+        if(degree == 0) {
+            return false;
+        }
+
+        return card.domain().some((player) => {
+            if(degree > 1) {
+                this.push_state();
+            }
+
+            card.assign(player);
+            let result = this.solve_step();
+
+            if(degree > 1) {
+                this.pop_state();
+            }
+
+            return result;
+        });
+    }
+
+    // this method runs an backtracking solver for this constraint satisfaciton problem (CSP)
+    consistent(): Result {
+        if(this.solve_step()){
+            return {possible: true};
+        }else{
+            return {possible: false, reason: "inconsistent"}
+        }
     }
 }
