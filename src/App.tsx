@@ -11,6 +11,7 @@ const g = new Game(2);
 interface AppState {
     player: Player;
     type: "response"|"move";
+    game: Game;
     target: null | Player;
     category: null | Category;
     card: null | Card;
@@ -24,6 +25,7 @@ class App extends React.Component<{}, AppState> {
         state.category = null;
         state.target = null;
         state.card = null;
+        state.game = null;
 
         this.state = state;
     }
@@ -34,8 +36,6 @@ class App extends React.Component<{}, AppState> {
     }
 
     public render() {
-        console.log("render", g);
-
         return <div id="game">
             <div id="players">
                 <h3>Players</h3>

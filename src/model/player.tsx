@@ -1,7 +1,7 @@
 import {Game} from "./game";
 import {Category} from "./category";
 import {PlayerPattern} from "./player";
-import {Stateful} from "./stateful";
+import {Entity} from "./entity";
 import {Result} from "./result";
 import * as React from "react";
 import App from "../App";
@@ -14,7 +14,7 @@ interface PlayerState {
     quartets: number;
 }
 
-export class Player extends Stateful<PlayerState> implements Stateful<PlayerState> {
+export class Player extends Entity<PlayerState> implements Entity<PlayerState> {
     game: Game;
 
     constructor(id: number, game: Game){

@@ -1,7 +1,7 @@
 import {Player} from "./player";
 import {Card} from "./card";
 import {Game} from "./game";
-import {Stateful} from "./stateful";
+import {Entity} from "./entity";
 import {Result} from "./result";
 import {MoveQuartet} from "../moves";
 import App from "../App";
@@ -14,7 +14,7 @@ interface CategoryState {
 
 let colors = ["red", "blue", "green", "goldenrod", "purple"];
 
-export class Category extends Stateful<CategoryState> implements Stateful<CategoryState> {
+export class Category extends Entity<CategoryState> implements Entity<CategoryState> {
     game: Game;
     cards: Array<Card>;
 

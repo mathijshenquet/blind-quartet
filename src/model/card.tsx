@@ -1,7 +1,7 @@
 import {Game} from "./game";
 import {Category} from "./category";
 import {Player, PlayerPattern} from "./player";
-import {Stateful} from "./stateful";
+import {Entity} from "./entity";
 import {Result} from "./result";
 import {MoveAsk} from "../moves";
 import App from "../App";
@@ -13,7 +13,7 @@ interface CardState {
     degree: number;
 }
 
-export class Card extends Stateful<CardState> implements Stateful<CardState>{
+export class Card extends Entity<CardState> implements Entity<CardState>{
     category: Category;
 
     constructor(category: Category, id: number){

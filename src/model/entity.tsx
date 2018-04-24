@@ -1,12 +1,12 @@
 import App from "../App";
 import * as React from "react";
 
-export interface Stateful<S> {
+export interface Entity<S> {
     get_kind(): string;
     get_style(): any;
 }
 
-export class Stateful<S>{
+export class Entity<S>{
     state: S;
     previousStates: Array<S>;
 
