@@ -3,6 +3,7 @@ import * as React from "react";
 
 export interface Stateful<S> {
     get_kind(): string;
+    get_style(): any;
 }
 
 export class Stateful<S>{
@@ -45,7 +46,9 @@ export class Stateful<S>{
             }} />
         }
 
-        let inner = this.name != "" ? this.name : <span className="placeholder">{this.get_kind()} #{this.id + 1}</span>;
+        let inner = <span className={this.name == "" ? "placeholder" : ""} style={this.get_style()}>
+            {this.name != "" ? this.name : this.get_kind()+" #"+(this.id + 1)}
+        </span>;
         if(app == null){
             return inner;
         }

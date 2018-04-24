@@ -4,6 +4,7 @@ import {PlayerPattern} from "./player";
 import {Stateful} from "./stateful";
 import {Result} from "./result";
 import * as React from "react";
+import App from "../App";
 
 export type PlayerPattern = number;
 
@@ -13,7 +14,7 @@ interface PlayerState {
     quartets: number;
 }
 
-export class Player extends Stateful<PlayerState> {
+export class Player extends Stateful<PlayerState> implements Stateful<PlayerState> {
     game: Game;
 
     constructor(id: number, game: Game){
@@ -23,6 +24,10 @@ export class Player extends Stateful<PlayerState> {
 
     get_kind(): string{
         return "Player";
+    }
+
+    get_style(): any{
+        return {};
     }
 
     bit_pattern(): number {
@@ -92,6 +97,23 @@ export class Player extends Stateful<PlayerState> {
 
         return false;
     }
+
+
+    render(app: App){
+        let player = this;
+        let state = app.state;
+
+        const select_button = state.type == "move" && state.target == null && state.category == null && player != state.player
+            ? <button className="select" onClick={() => app.setState({target: player})}>Select</button>
+            : "";
+
+        return <li>
+            <span className={player==state.player ? "turn" : ""}>{player.show(app)}</span>&nbsp;
+            (free: {player.free_cards}, hand: {player.hand_cards}, quartets: {player.quartets})&nbsp;
+            {select_button}
+        </li>;
+    }
+
 
     render_multiplicity(category: Category) {
         let count = category.multiplicity(this);

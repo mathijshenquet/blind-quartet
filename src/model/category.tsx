@@ -14,7 +14,7 @@ interface CategoryState {
 
 let colors = ["red", "blue", "green", "goldenrod", "purple"];
 
-export class Category extends Stateful<CategoryState> {
+export class Category extends Stateful<CategoryState> implements Stateful<CategoryState> {
     game: Game;
     cards: Array<Card>;
 
@@ -31,6 +31,10 @@ export class Category extends Stateful<CategoryState> {
 
     get_kind(): string{
         return "Category";
+    }
+
+    get_style(): any {
+        return {color: colors[this.id]};
     }
 
     get completed(): boolean{
@@ -129,7 +133,7 @@ export class Category extends Stateful<CategoryState> {
         return <div style={{borderColor: color}} className="category">
             <h3 style={{color}}>{this.show(app)} {multiplicities} {select_button}</h3>
             <ul>
-                {this.cards.map((card) => <li>{app.render_card(card)}</li>)}
+                {this.cards.map((card) => <li>{card.render(app)}</li>)}
             </ul>
         </div>;
     }

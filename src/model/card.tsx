@@ -3,6 +3,9 @@ import {Category} from "./category";
 import {Player, PlayerPattern} from "./player";
 import {Stateful} from "./stateful";
 import {Result} from "./result";
+import {MoveAsk} from "../moves";
+import App from "../App";
+import * as React from "react";
 
 interface CardState {
     owner: Player | null;
@@ -10,7 +13,7 @@ interface CardState {
     degree: number;
 }
 
-export class Card extends Stateful<CardState>{
+export class Card extends Stateful<CardState> implements Stateful<CardState>{
     category: Category;
 
     constructor(category: Category, id: number){
@@ -21,6 +24,10 @@ export class Card extends Stateful<CardState>{
 
     get_kind(): string{
         return "Card";
+    }
+
+    get_style(): any {
+        return this.category.get_style();
     }
 
     get game(): Game{
@@ -94,5 +101,29 @@ export class Card extends Stateful<CardState>{
 
     print() {
         return "cat#"+(this.category.id+1)+" card#"+(this.id+1);
+    }
+
+    render(app: App){
+        let state = app.state;
+        let card = this;
+
+        let consistent = MoveAsk.try_card(state.player, card);
+        const select_button = state.type == "move" && state.category == null && state.card == null
+            ? <button className="select" disabled={!consistent.possible}
+                      title={!consistent.possible ? consistent.reason : undefined}
+                      onClick={() => app.setState({card})}>Select</button>
+            : "";
+
+        let excluded, owner;
+        if(card.owner == null) {
+            const excluded_list = card.get_excluded().map((player) => player.show());
+            if (excluded_list.length > 0) {
+                excluded = <span className="info">- {excluded_list.join(", ")}</span>;
+            }
+        }else{
+            owner = <span className="info">+ {card.owner.show()}</span>;
+        }
+
+        return <span>{card.show(app)} {excluded} {owner} {select_button}</span>;
     }
 }
