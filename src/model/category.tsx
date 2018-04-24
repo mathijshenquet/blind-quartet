@@ -1,30 +1,36 @@
 import {Player} from "./player";
 import {Card} from "./card";
 import {Game} from "./game";
-import * as React from "react";
 import {Stateful} from "./stateful";
 import {Result} from "./result";
+import {MoveQuartet} from "../moves";
+import App from "../App";
+import * as React from "react";
 
 interface CategoryState {
     reserved: number;
     completed: boolean;
 }
 
+let colors = ["red", "blue", "green", "goldenrod", "purple"];
+
 export class Category extends Stateful<CategoryState> {
-    id: number;
-    name: string;
     game: Game;
     cards: Array<Card>;
 
     constructor(id: number, game: Game){
-        super({reserved: 0, completed: false});
+        super(id, {reserved: 0, completed: false});
 
-        this.id = id;
         this.cards = [];
         this.game = game;
         for(let i = 0; i < 4; i++){
             this.cards.push(new Card(this, i));
         }
+    }
+
+
+    get_kind(): string{
+        return "Category";
     }
 
     get completed(): boolean{
@@ -103,7 +109,28 @@ export class Category extends Stateful<CategoryState> {
         return this.cards.some((card) => card.can_be_claimed_by(player));
     }
 
-    show() {
-        return this.name || <span className="placeholder">Category #{1+this.id}</span>;
+
+    render(app: App){
+        let color = colors[this.id];
+        let state = app.state;
+
+        let quartet = new MoveQuartet(state.player, this);
+        let consistent = quartet.try();
+        const select_button = state.type == "move" && state.target == null && state.category == null && state.card == null
+            ? <button className="select" disabled={!consistent.possible} title={!consistent.possible ? consistent.reason : undefined} onClick={() => app.setState({category: this})}>Quartet</button>
+            : "";
+
+        let player_counts = this.game.players
+            .map((player) => player.render_multiplicity(this))
+            .filter((m) => m != null);
+
+        let multiplicities = player_counts.length > 0 ? <span className="info"> + {player_counts}</span> : undefined;
+
+        return <div style={{borderColor: color}} className="category">
+            <h3 style={{color}}>{this.show(app)} {multiplicities} {select_button}</h3>
+            <ul>
+                {this.cards.map((card) => <li>{app.render_card(card)}</li>)}
+            </ul>
+        </div>;
     }
 }

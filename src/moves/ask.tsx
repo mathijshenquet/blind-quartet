@@ -43,7 +43,7 @@ export class MoveAsk extends Move{
 
     render(): any {
         return <span>
-            does {this.target.show(null)} have {this.card.show()} in category {this.card.category.show()}?
+            does {this.target.show()} have {this.card.show()} in category {this.card.category.show()}?
         </span>;
     }
 

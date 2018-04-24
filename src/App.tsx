@@ -8,8 +8,6 @@ import {MoveAsk, MoveButton, MoveQuartet, MoveResponse} from "./moves";
 
 const g = new Game(2);
 
-let colors = ["red", "blue", "green", "goldenrod", "purple"];
-
 interface AppState {
     player: Player;
     type: "response"|"move";
@@ -60,38 +58,14 @@ class App extends React.Component<{}, AppState> {
             : "";
 
         return <li>
-            <span className={player==this.state.player ? "turn" : ""}>{player.show(this)}</span>&nbsp;
+            <span className={player==this.state.player ? "turn" : ""}>{player.show()}</span>&nbsp;
             (free: {player.free_cards}, hand: {player.hand_cards}, quartets: {player.quartets})&nbsp;
             {select_button}
         </li>;
     }
 
     render_categories() {
-        return <div id="categories">{g.categories.map((cat) => this.render_category(cat))}</div>;
-    }
-
-    render_category(category: Category){
-        let color = colors[category.id];
-        let state = this.state;
-
-        let quartet = new MoveQuartet(state.player, category);
-        let consistent = quartet.try();
-        const select_button = state.type == "move" && state.target == null && state.category == null && state.card == null
-            ? <button className="select" disabled={!consistent.possible} title={!consistent.possible ? consistent.reason : undefined} onClick={() => this.setState({category})}>Quartet</button>
-            : "";
-
-        let player_counts = g.players
-            .map((player) => player.render_multiplicity(category))
-            .filter((m) => m != null);
-
-        let multiplicities = player_counts.length > 0 ? <span className="info"> + {player_counts}</span> : undefined;
-
-        return <div style={{borderColor: color}} className="category">
-            <h3 style={{color}}>{category.show()} {multiplicities} {select_button}</h3>
-            <ul>
-                {category.cards.map((card) => <li>{this.render_card(card)}</li>)}
-            </ul>
-        </div>;
+        return <div id="categories">{g.categories.map((cat) => cat.render(this))}</div>;
     }
 
     render_card(card: Card){
@@ -113,7 +87,7 @@ class App extends React.Component<{}, AppState> {
             owner = <span className="info">+ {card.owner.show(this)}</span>;
         }
 
-        return <span>{card.show()} {excluded} {owner} {select_button}</span>;
+        return <span>{card.show(this)} {excluded} {owner} {select_button}</span>;
     }
 
     render_actions(){
@@ -135,7 +109,7 @@ class App extends React.Component<{}, AppState> {
 
     render_log() {
         return g.moves.map((move) => <tr>
-            <td>{move.player.show(this)}</td>
+            <td>{move.player.show()}</td>
             <td>{move.render()}</td>
         </tr>)
     }
@@ -163,7 +137,7 @@ class App extends React.Component<{}, AppState> {
             let parts = [];
 
             if(category != null){
-                parts.push(<span>Proclaim quartet of {category.show()}</span>);
+                parts.push(<span>Proclaim quartet of {category.show(this)}? </span>);
 
                 parts.push(<MoveButton move={new MoveQuartet(player, category)}
                                        after={() => this.tick({category: null})}>Execute</MoveButton>);

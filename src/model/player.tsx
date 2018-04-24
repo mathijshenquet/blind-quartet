@@ -4,7 +4,6 @@ import {PlayerPattern} from "./player";
 import {Stateful} from "./stateful";
 import {Result} from "./result";
 import * as React from "react";
-import App from "../App";
 
 export type PlayerPattern = number;
 
@@ -15,19 +14,16 @@ interface PlayerState {
 }
 
 export class Player extends Stateful<PlayerState> {
-    id: number;
-    name: string;
     game: Game;
-    modifying: boolean;
 
     constructor(id: number, game: Game){
-        super({free_cards: 4, hand_cards: 4, quartets: 0});
-
-        this.id = id;
+        super(id, {free_cards: 4, hand_cards: 4, quartets: 0});
         this.game = game;
-        this.modifying = false;
     }
 
+    get_kind(): string{
+        return "Player";
+    }
 
     bit_pattern(): number {
         return 1 << this.id;
@@ -97,32 +93,10 @@ export class Player extends Stateful<PlayerState> {
         return false;
     }
 
-    show(app: App | null): any {
-        if(this.modifying && app != null){
-            return <input type="text" value={this.name} onChange={(event) => {
-                this.name = event.target.value;
-                app.forceUpdate();
-            }} onBlur={() => {
-                this.modifying = false;
-                app.forceUpdate();
-            }} />
-        }
-
-        let inner = this.name || <span className="placeholder">Player #{this.id + 1}</span>;
-        if(app == null){
-            return inner;
-        }
-
-        return <span onClick={() => {
-            this.modifying = true;
-            app.forceUpdate();
-        }}>{inner}</span>;
-    }
-
     render_multiplicity(category: Category) {
         let count = category.multiplicity(this);
         if(count == 0) return null;
-        if(count == 1) return <span className="count">{this.show(null)}</span>;
-        return <span className="count">{count}x{this.show(null)}</span>;
+        if(count == 1) return <span className="count">{this.show()}</span>;
+        return <span className="count">{count}x{this.show()}</span>;
     }
 }

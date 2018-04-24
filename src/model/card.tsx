@@ -1,5 +1,4 @@
 import {Game} from "./game";
-import * as React from "react";
 import {Category} from "./category";
 import {Player, PlayerPattern} from "./player";
 import {Stateful} from "./stateful";
@@ -12,17 +11,20 @@ interface CardState {
 }
 
 export class Card extends Stateful<CardState>{
-    id: number;
-    name: string;
     category: Category;
-    game: Game;
 
     constructor(category: Category, id: number){
-        super({excluded: category.game.empty_pattern(), owner: null, degree: category.game.length});
+        super(id, {excluded: category.game.empty_pattern(), owner: null, degree: category.game.length});
 
         this.category = category;
-        this.game = category.game;
-        this.id = id;
+    }
+
+    get_kind(): string{
+        return "Card";
+    }
+
+    get game(): Game{
+        return this.category.game;
     }
 
     get degree(): number{
@@ -88,10 +90,6 @@ export class Card extends Stateful<CardState>{
         }else{
             return {possible: true};
         }
-    }
-
-    show(){
-        return this.name || <span className="placeholder">Card #{this.id+1}</span>;
     }
 
     print() {
