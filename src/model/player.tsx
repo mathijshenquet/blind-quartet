@@ -2,7 +2,6 @@ import {Game} from "./game";
 import {Category} from "./category";
 import {PlayerPattern} from "./player";
 import {Entity} from "./entity";
-import {Result} from "./result";
 import * as React from "react";
 import GameView from "../Game";
 
@@ -75,14 +74,6 @@ export class Player extends Entity<PlayerState> implements Entity<PlayerState> {
                 if(card.owner != this) card.exclude(this);
             });
         });
-    }
-
-    consistent(): Result {
-        if(this.free_cards >= 0){
-            return {possible: true};
-        }else{
-            return {possible: false, reason: "Can't have negative free cards"};
-        }
     }
 
     playing_in(cat: Category): boolean {

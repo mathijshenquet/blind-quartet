@@ -36,9 +36,13 @@ export class Game{
         return this.players[id];
     }
 
-    next_player(){
-        const next_id = (this.turn.id + 1) % this.players.length;
-        this.turn = this.get_player(next_id);
+    next_player(player?: Player) {
+        if(player == undefined) {
+            const next_id = (this.turn.id + 1) % this.players.length;
+            player = this.get_player(next_id);
+        }
+
+        this.turn = player;
     }
 
     /// manage state
@@ -83,14 +87,31 @@ export class Game{
         return ~((1 << this.players.length) - 1);
     }
 
-    solve_step(): boolean {
+    consistent(): Result{
+        for(let i = 0; ; i++){
+            if(this.turn.hand_cards > 0) {
+                break;
+            }
+
+            this.next_player();
+            if(i > this.length){
+                //throw new Error();
+                return {possible: true};
+            }
+        }
+
+        return this.solve_step();
+    }
+
+    solve_step(): Result {
+
         if(this.players.some((player) => {
             if(player.free_cards == 0)
                 player.try_exclude_other();
 
             return player.free_cards < 0;
         })){
-            return false;
+            return {possible: false, reason: "Some player has negative cards"};
         }
 
         let most_constrained: Card | null = null;
@@ -109,16 +130,18 @@ export class Game{
         });
 
         // is solvable!
-        if(most_constrained == null) return true;
+        if(most_constrained == null)
+            return {possible: true};
 
-        let card: Card = most_constrained;
+        let card = most_constrained as Card;
         let degree = card.degree;
 
         if(degree == 0) {
-            return false;
+            return {possible: false, reason: "The card "+card.print()+" cannot be owned anymore"};
         }
 
-        return card.domain().some((player) => {
+        let consistent: Result = {possible: true};
+        card.domain().some((player) => {
             if(degree > 1) {
                 this.push_state();
             }
@@ -130,16 +153,9 @@ export class Game{
                 this.pop_state();
             }
 
-            return result;
+            consistent = result;
+            return result.possible;
         });
-    }
-
-    // this method runs an backtracking solver for this constraint satisfaction problem (CSP)
-    consistent(): Result {
-        if(this.solve_step()){
-            return {possible: true};
-        }else{
-            return {possible: false, reason: "inconsistent"}
-        }
+        return consistent;
     }
 }

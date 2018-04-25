@@ -29,7 +29,6 @@ export class MoveResponse extends Move {
             this.card.exclude(this.player);
             this.game.next_player();
         }
-
     }
 
     try(): Result{

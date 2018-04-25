@@ -20,7 +20,7 @@ export class App extends React.Component<any, AppState> {
     render(){
         let {game, showInfo} = this.state;
         if(game == null || showInfo){
-            let picks = [3,4,5,6].map((i) => <button className="btn btn-default btn-sm" key={i} onClick={this.startGame.bind(this, i)}>{i} players</button>);
+            let picks = [1,2,3,4,5,6].map((i) => <button className="btn btn-default btn-sm" key={i} onClick={this.startGame.bind(this, i)}>{i} players</button>);
 
             return <div id="explain">
                 <h1>Blind quartet</h1>
