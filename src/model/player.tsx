@@ -94,7 +94,7 @@ export class Player extends Entity<PlayerState> implements Entity<PlayerState> {
         let state = app.state;
 
         const select_button = state.type == "move" && state.target == null && state.category == null && player != state.player
-            ? <button className="select" onClick={() => app.setState({target: player})}>Select</button>
+            ? <button className="select btn btn-xs btn-default" onClick={() => app.setState({target: player})}>Select</button>
             : "";
 
         return <li>
@@ -103,7 +103,6 @@ export class Player extends Entity<PlayerState> implements Entity<PlayerState> {
             {select_button}
         </li>;
     }
-
 
     render_multiplicity(category: Category) {
         let count = category.multiplicity(this);

@@ -77,11 +77,11 @@ class Game extends React.Component<GameProps, GameState> {
         if(this.state.type == "response"){
             if(target == null || card == null) throw new Error();
 
-            let parts = [<span>replies: </span>];
+            let parts: any = [<span>replies: </span>];
 
             parts.push(<MoveButton move={new MoveResponse(game, target, card, true)}
                                    after={() => this.tick({target: null, card: null})}>Yes</MoveButton>);
-
+            parts.push(" ");
             parts.push(<MoveButton move={new MoveResponse(game, target, card, false)}
                                    after={() => this.tick({target: null, card: null})}>No</MoveButton>);
 
@@ -113,7 +113,8 @@ class Game extends React.Component<GameProps, GameState> {
                 }
             }
 
-            parts.push(<button onClick={() => this.setState({category: null, target: null, card: null})}>Cancel</button>);
+            parts.push(" ");
+            parts.push(<button className="btn btn-xs btn-default" onClick={() => this.setState({category: null, target: null, card: null})}>Cancel</button>);
             return parts;
         }
     }

@@ -110,7 +110,7 @@ export class Card extends Entity<CardState> implements Entity<CardState>{
         let select_button: any = "";
         if(state.type == "move" && state.category == null && state.card == null){
             let consistent = MoveAsk.try_card(state.player, card);
-            select_button = <button className="select" disabled={!consistent.possible}
+            select_button = <button className="select btn btn-xs btn-default" disabled={!consistent.possible}
                                     title={!consistent.possible ? consistent.reason : undefined}
                                     onClick={() => app.setState({card})}>Select</button>;
         }

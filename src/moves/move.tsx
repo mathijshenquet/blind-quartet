@@ -41,7 +41,8 @@ interface MoveButtonProps {
 export class MoveButton extends React.Component<MoveButtonProps, {}> {
     render(): ReactNode{
         let consistent = this.props.move.try();
-        return <button disabled={!consistent.possible}
+        return <button className="btn btn-xs btn-primary"
+                       disabled={!consistent.possible}
                        title={!consistent.possible ? consistent.reason : undefined}
                        onClick={this.execute.bind(this)}>{this.props.children}</button>;
     }

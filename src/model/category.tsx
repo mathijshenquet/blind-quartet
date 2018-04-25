@@ -49,9 +49,9 @@ export class Category extends Entity<CategoryState> implements Entity<CategorySt
         return player.is_in(this.state.reserved);
     }
 
-    is_exclusive(player: Player): boolean {
+    is_exclusive(player?: Player): boolean {
         return this.state.reserved == 0
-            || this.state.reserved == player.bit_pattern();
+            || (player != undefined && this.state.reserved == player.bit_pattern());
     }
 
     multiplicity(player: Player): number {
@@ -125,7 +125,7 @@ export class Category extends Entity<CategoryState> implements Entity<CategorySt
             let consistent = quartet.try();
 
             select_button =
-                <button className="select" disabled={!consistent.possible}
+                <button className="select btn btn-sm btn-default" disabled={!consistent.possible}
                         title={!consistent.possible ? consistent.reason : undefined}
                         onClick={() => app.setState({category: this})}>Quartet</button>;
         }
