@@ -52,7 +52,7 @@ class Game extends React.Component<GameProps, GameState> {
         let game = this.props.game;
 
         return <div id="actions">
-            <h2>Actions</h2>
+            <h3>Actions</h3>
             <table id="log">
                 <tr>
                     <th>Player</th>

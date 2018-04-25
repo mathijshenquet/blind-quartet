@@ -99,7 +99,7 @@ export class Player extends Entity<PlayerState> implements Entity<PlayerState> {
 
         return <li>
             <span className={player==state.player ? "turn" : ""}>{player.show(app)}</span>&nbsp;
-            (free: {player.free_cards}, hand: {player.hand_cards}, quartets: {player.quartets})&nbsp;
+            <span className="info">(free: {player.free_cards}, hand: {player.hand_cards}, quartets: {player.quartets})</span>&nbsp;
             {select_button}
         </li>;
     }
