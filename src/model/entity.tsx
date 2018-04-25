@@ -35,15 +35,20 @@ export class Entity<S>{
         this.previousStates.push(Object.assign({}, this.state));
     }
 
+    end_edit(app: App){
+        this.modifying = false;
+        app.forceUpdate();
+    }
+
     show(app?: App): any {
         if(this.modifying && app != undefined){
-            return <input type="text" value={this.name} onChange={(event) => {
+            return <input autoFocus type="text" value={this.name} onChange={(event) => {
                 this.name = event.target.value;
                 app.forceUpdate();
-            }} onBlur={() => {
-                this.modifying = false;
-                app.forceUpdate();
-            }} />
+            }} onBlur={this.end_edit.bind(this, app)} onKeyPress={event => {
+                if (event.key == 'Enter')
+                    this.end_edit(app)
+            }}/>
         }
 
         let inner = <span className={this.name == "" ? "placeholder" : ""} style={this.get_style()}>
