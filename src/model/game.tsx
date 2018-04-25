@@ -95,6 +95,10 @@ export class Game{
 
         let most_constrained: Card | null = null;
         this.categories.forEach((category) => {
+            if(category.is_exclusive()){
+                return;
+            }
+
             category.cards.forEach((card) => {
                 if(card.owner != null && card.degree == 1) return;
 
