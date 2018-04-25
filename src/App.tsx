@@ -1,120 +1,69 @@
-import * as React from 'react';
-import './App.css';
 import {Game} from "./model/game";
-import {Card} from "./model/card";
-import {Player} from "./model/player";
-import {Category} from "./model/category";
-import {MoveAsk, MoveButton, MoveQuartet, MoveResponse} from "./moves";
-
-const g = new Game(2);
+import * as React from "react";
+import GameView from "./Game";
 
 interface AppState {
-    player: Player;
-    type: "response"|"move";
-    game: Game;
-    target: null | Player;
-    category: null | Category;
-    card: null | Card;
+    game: Game | null,
+    showInfo: boolean,
 }
 
-class App extends React.Component<{}, AppState> {
-    constructor(props: {}){
+export class App extends React.Component<any, AppState> {
+    constructor(props: any){
         super(props);
-
-        let state: any = g.next_action();
-        state.category = null;
-        state.target = null;
-        state.card = null;
-        state.game = null;
-
-        this.state = state;
+        this.state = {game: null, showInfo: false};
     }
 
-    private tick(stateUpdate: any) {
-        this.setState(stateUpdate);
-        this.setState(g.next_action());
+    startGame(length: number){
+        this.setState({game: new Game(length)});
     }
 
-    public render() {
-        return <div id="game">
-            <div id="players">
-                <h3>Players</h3>
-                <ul>{g.players.map((player) => player.render(this))}</ul>
-            </div>
-            <div id="categories">
-                {g.categories.map((cat) => cat.render(this))}
-            </div>
-            {this.render_actions()}
-        </div>;
-    }
+    render(){
+        let {game, showInfo} = this.state;
+        if(game == null || showInfo){
+            let picks = [2,3,4,5,6].map((i) => <button key={i} onClick={this.startGame.bind(this, i)}>{i} players</button>);
 
-    render_actions(){
-        return <div id="actions">
-            <h2>Actions</h2>
-            <table id="log">
-                <tr>
-                    <th>Player</th>
-                    <th>Action</th>
-                </tr>
-                {g.moves.map((move) => <tr>
-                    <td>{move.player.show()}</td>
-                    <td>{move.render()}</td>
-                </tr>)}
-                <tr className="current">
-                    <td>{this.state.player.show()}</td>
-                    <td>{this.render_current_move()}</td>
-                </tr>
-            </table>
-        </div>;
-    }
+            return <div className="explain">
+                <h1>Blind quartet</h1>
 
-    render_current_move(){
-        let {category, target, player, card} = this.state;
+                <p>Blind Quartets works similarly to regular Quartets, in that
+                    each player's goal is to collect as many 'quartets', sets of
+                    4 cards from the same category, as possible. The difference
+                    is that the categories and cards therein are initially unknown
+                    (hence 'Blind') and are only established during the game
+                    itself, instead of being fixed beforehand. In fact, the
+                    'cards' are completely imaginary, and no physical items of
+                    any sort are required to play this game.</p>
 
-        if(this.state.type == "response"){
-            if(target == null || card == null) throw new Error();
+                <h2>Basics</h2>
+                <p>Each player starts with 4 hand cards and must attempt to collect as many sets of 4 cards as possible. The players take turns requesting a specific card from a specific category from any other player they wish. For example, at the start of the game, Player 1 could ask Player 2 'do you have the card kB from the category fundamental constants?' If Player 2 decides that they indeed have card, they say so; Player 1 then receives the card and may ask another card from any player. If Player 2 decides they do not have the card, Player 1's turn ends.</p>
 
-            let parts = [<span>replies: </span>];
+                <p>
+                    Which cards and categories are in play, and which player owns which cards, is initially unknown, but becomes clear in the course of the game. For example, the above request made by Player 1 would establish the following facts:
+                </p>
+                    <ol>
+                        <li>There exists a category 'fundamental constants'</li>
+                        <li>The category 'fundamental constants' contains a card 'kB'</li>
+                        <li>Player 1 does not currently own kB.</li>
+                        <li>Player 1 does currently own a different card from that category</li>
+                    </ol>
+                <p>Eventually, one can deduce exactly which player owns which card, at which point your job is to simply request those cards and assemble them into quartets.</p>
 
-            parts.push(<MoveButton move={new MoveResponse(g, target, card,true)}
-                                   after={() => this.tick({target: null, card: null})}>Yes</MoveButton>);
+                <h2>Rules</h2>
+                <ul>
+                    <li>You are obliged to request a card if it is your turn and you have at least 1 active card.</li>
+                    <li>You may only ask one card from one player at a time.</li>
+                    <li>You may only ask a card from a category from which you already have at least 1 card. This implies that a player with 0 active cards cannot ask anything anymore.</li>
+                    <li>You may not ask a card that does not exist (once all categories and cards in the game have been defined, this rule becomes important).</li>
+                    <li>You may not ask a card that you have yourself.</li>
+                </ul>
 
-            parts.push(<MoveButton move={new MoveResponse(g, target, card,false)}
-                                   after={() => this.tick({target: null, card: null})}>No</MoveButton>);
+                <p>The single important most important rule in the game is <b>'everything still possible is allowed'</b>.</p>
 
-            return parts;
+                <h2>Start game</h2>
+                <p>Start a game with: {picks}</p>
+            </div>;
         }else{
-            if(target == null && card == null && category == null){
-                return <span className="help">Pick a target and ask for a card, or proclaim a quartet</span>;
-            }
-
-            let parts = [];
-
-            if(category != null){
-                parts.push(<span>Proclaim quartet of {category.show(this)}? </span>);
-
-                parts.push(<MoveButton move={new MoveQuartet(player, category)}
-                                       after={() => this.tick({category: null})}>Execute</MoveButton>);
-
-            }else {
-                if (target != null) parts.push();
-
-                let $card = <span>ask {card == null ? "..." : card.show()}</span>;
-                let $target = <span>from {target == null ? "..." : target.show()}</span>;
-
-                parts.push([$card, " ", $target, "? "]);
-
-                if (target != null && card != null) {
-                    parts.push(<MoveButton move={new MoveAsk(player, target, card)}
-                                           after={() => this.tick({category: null})}>Execute</MoveButton>);
-                }
-            }
-
-            parts.push(<button onClick={() => this.setState({category: null, target: null, card: null})}>Cancel</button>);
-            return parts;
+            return <GameView game={game} />;
         }
     }
-
 }
-
-export default App;

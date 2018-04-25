@@ -1,4 +1,4 @@
-import App from "../App";
+import Game from "../Game";
 import * as React from "react";
 
 export interface Entity<S> {
@@ -35,12 +35,12 @@ export class Entity<S>{
         this.previousStates.push(Object.assign({}, this.state));
     }
 
-    end_edit(app: App){
+    end_edit(app: Game){
         this.modifying = false;
         app.forceUpdate();
     }
 
-    show(app?: App): any {
+    show(app?: Game): any {
         if(this.modifying && app != undefined){
             return <input autoFocus type="text" value={this.name} onChange={(event) => {
                 this.name = event.target.value;

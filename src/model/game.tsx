@@ -41,10 +41,6 @@ export class Game{
         this.turn = this.get_player(next_id);
     }
 
-    get_category(id: number) {
-        return this.categories[id];
-    }
-
     /// manage state
     push_state(){
         this.players.forEach((player) => player.push_state());
@@ -92,7 +88,7 @@ export class Game{
             if(player.free_cards == 0)
                 player.try_exclude_other();
 
-            return player.free_cards < 0
+            return player.free_cards < 0;
         })){
             return false;
         }
@@ -102,9 +98,7 @@ export class Game{
             category.cards.forEach((card) => {
                 if(card.owner != null && card.degree == 1) return;
 
-                if(most_constrained == null) {
-                    most_constrained = card;
-                }else if(most_constrained.degree > card.degree){
+                if(most_constrained == null || most_constrained.degree > card.degree){
                     most_constrained = card;
                 }
             })
@@ -136,7 +130,7 @@ export class Game{
         });
     }
 
-    // this method runs an backtracking solver for this constraint satisfaciton problem (CSP)
+    // this method runs an backtracking solver for this constraint satisfaction problem (CSP)
     consistent(): Result {
         if(this.solve_step()){
             return {possible: true};

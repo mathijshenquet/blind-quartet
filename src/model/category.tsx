@@ -4,7 +4,7 @@ import {Game} from "./game";
 import {Entity} from "./entity";
 import {Result} from "./result";
 import {MoveQuartet} from "../moves";
-import App from "../App";
+import GameView from "../Game";
 import * as React from "react";
 
 interface CategoryState {
@@ -114,15 +114,22 @@ export class Category extends Entity<CategoryState> implements Entity<CategorySt
     }
 
 
-    render(app: App){
+    render(app: GameView){
         let color = colors[this.id];
         let state = app.state;
 
-        let quartet = new MoveQuartet(state.player, this);
-        let consistent = quartet.try();
-        const select_button = state.type == "move" && state.target == null && state.category == null && state.card == null
-            ? <button className="select" disabled={!consistent.possible} title={!consistent.possible ? consistent.reason : undefined} onClick={() => app.setState({category: this})}>Quartet</button>
-            : "";
+        let select_button: any = "";
+        if(state.type == "move" && state.target == null && state.category == null && state.card == null) {
+
+            let quartet = new MoveQuartet(state.player, this);
+            let consistent = quartet.try();
+
+            select_button =
+                <button className="select" disabled={!consistent.possible}
+                        title={!consistent.possible ? consistent.reason : undefined}
+                        onClick={() => app.setState({category: this})}>Quartet</button>;
+        }
+
 
         let player_counts = this.game.players
             .map((player) => player.render_multiplicity(this))

@@ -4,7 +4,7 @@ import {PlayerPattern} from "./player";
 import {Entity} from "./entity";
 import {Result} from "./result";
 import * as React from "react";
-import App from "../App";
+import GameView from "../Game";
 
 export type PlayerPattern = number;
 
@@ -60,7 +60,6 @@ export class Player extends Entity<PlayerState> implements Entity<PlayerState> {
 
     set free_cards(value: number) {
         this.state.free_cards = value;
-        this.try_exclude_other();
     }
 
     // exclude ourselves from all cards we dont own or who'se category we play in
@@ -87,19 +86,10 @@ export class Player extends Entity<PlayerState> implements Entity<PlayerState> {
     }
 
     playing_in(cat: Category): boolean {
-        if(cat.completed){
-            return false;
-        }
-
-        if(cat.multiplicity(this) > 0){
-            return true;
-        }
-
-        return false;
+        return !cat.completed && cat.multiplicity(this) > 0;
     }
 
-
-    render(app: App){
+    render(app: GameView){
         let player = this;
         let state = app.state;
 

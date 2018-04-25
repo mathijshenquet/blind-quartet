@@ -15,7 +15,7 @@ export class MoveAsk extends Move{
         this.card = card;
     }
 
-    static try_card(player: Player, card: Card){
+    static try_card(player: Player, card: Card): Result{
         let category = card.category;
 
         if(card.owner == player){
@@ -48,23 +48,8 @@ export class MoveAsk extends Move{
     }
 
     try(): Result{
-        /*
-        if(category.completed){
-            return {possible: false, reason: "Is already in a quartet"};
-        }
-
-        if(player.playing_in(category)) {
-            return {possible: true};
-        }
-
-        if(player.free_cards == 0){
-            return {possible: false, reason: "You have no more free cards"}
-        }
-
-        if(!category.can_have_player(player)){
-            return {possible: false, reason: "There are no more free cards in this category"}
-        }
-        */
+        let consistent = MoveAsk.try_card(this.player, this.card);
+        if(!consistent.possible) return consistent;
 
         return super.try();
     }

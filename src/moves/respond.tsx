@@ -4,7 +4,6 @@ import {Game} from "../model/game";
 import {Move} from "./move";
 import * as React from "react";
 import {Card} from "../model/card";
-import {MoveAsk} from "./ask";
 
 export class MoveResponse extends Move {
     did_have: boolean;
@@ -34,13 +33,8 @@ export class MoveResponse extends Move {
     }
 
     try(): Result{
-        let last_move = this.game.last_move;
-        if(!last_move){
-            return {possible: false, reason: "Nothing to respond to"};
-        }
-
-        if(!(last_move instanceof MoveAsk)){
-            return {possible: false, reason: "Last move isn't an ask"};
+        if(this.card.is_excluded(this.player) && this.did_have){
+            return {possible: false, reason: "You are excluded from owning this card"};
         }
 
         return super.try();

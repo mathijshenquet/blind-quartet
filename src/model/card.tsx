@@ -4,7 +4,7 @@ import {Player, PlayerPattern} from "./player";
 import {Entity} from "./entity";
 import {Result} from "./result";
 import {MoveAsk} from "../moves";
-import App from "../App";
+import GameView from "../Game";
 import * as React from "react";
 
 interface CardState {
@@ -103,22 +103,23 @@ export class Card extends Entity<CardState> implements Entity<CardState>{
         return "cat#"+(this.category.id+1)+" card#"+(this.id+1);
     }
 
-    render(app: App){
+    render(app: GameView){
         let state = app.state;
         let card = this;
 
-        let consistent = MoveAsk.try_card(state.player, card);
-        const select_button = state.type == "move" && state.category == null && state.card == null
-            ? <button className="select" disabled={!consistent.possible}
-                      title={!consistent.possible ? consistent.reason : undefined}
-                      onClick={() => app.setState({card})}>Select</button>
-            : "";
+        let select_button: any = "";
+        if(state.type == "move" && state.category == null && state.card == null){
+            let consistent = MoveAsk.try_card(state.player, card);
+            select_button = <button className="select" disabled={!consistent.possible}
+                                    title={!consistent.possible ? consistent.reason : undefined}
+                                    onClick={() => app.setState({card})}>Select</button>;
+        }
 
         let excluded, owner;
         if(card.owner == null) {
-            const excluded_list = card.get_excluded().map((player) => player.show());
+            const excluded_list = card.get_excluded().map((player) => <span className="count">{player.show()}</span>);
             if (excluded_list.length > 0) {
-                excluded = <span className="info">- {excluded_list.join(", ")}</span>;
+                excluded = <span className="info">- {excluded_list}</span>;
             }
         }else{
             owner = <span className="info">+ {card.owner.show()}</span>;

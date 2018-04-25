@@ -17,7 +17,7 @@ export class MoveQuartet extends Move {
             return {possible: false, reason: "Is already a quartet"};
         }
 
-        /*
+        let {player, category} = this;
         if(player.hand_cards < 4){
             return {possible: false, reason: "You don't have enough cards"};
         }
@@ -25,7 +25,6 @@ export class MoveQuartet extends Move {
         if(!category.is_exclusive(player)){
             return {possible: false, reason: "Someone else has cards in this category"};
         }
-        */
 
         return super.try();
     }
