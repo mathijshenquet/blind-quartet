@@ -80,6 +80,10 @@ h3 {
     margin: 0 1.5em;
 }
 
+.turn{
+    text-decoration: underline;
+}
+
 #categories{
     grid-area: categories;
 }
