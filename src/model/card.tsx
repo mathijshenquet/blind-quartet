@@ -117,7 +117,7 @@ export class Card extends Entity<CardState> implements Entity<CardState>{
 
         let excluded, owner;
         if(card.owner == null) {
-            const excluded_list = card.get_excluded().map((player) => <span className="count">{player.show()}</span>);
+            const excluded_list = card.get_excluded().map((player) => <span className="count" key={player.id}>{player.show()}</span>);
             if (excluded_list.length > 0) {
                 excluded = <span className="info">- {excluded_list}</span>;
             }

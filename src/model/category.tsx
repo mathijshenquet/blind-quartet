@@ -142,10 +142,10 @@ export class Category extends Entity<CategoryState> implements Entity<CategorySt
 
         let multiplicities = player_counts.length > 0 ? <span className="info"> + {player_counts}</span> : undefined;
 
-        return <div style={{borderColor: color}} className="category">
+        return <div style={{borderColor: color}} className="category" key={this.id}>
             <h3 style={{color}}>{this.show(app)} {multiplicities} {select_button}</h3>
             <ul>
-                {this.cards.map((card) => <li>{card.render(app)}</li>)}
+                {this.cards.map((card) => <li key={card.id}>{card.render(app)}</li>)}
             </ul>
         </div>;
     }

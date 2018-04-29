@@ -114,11 +114,14 @@ class Game extends React.Component<GameProps, GameState> {
         return <div id="actions">
             <h3>Actions</h3>
             <table id="log">
+                <thead>
                 <tr>
                     <th>Player</th>
                     <th>Action</th>
                 </tr>
-                {game.moves.map((move) => <tr>
+                </thead>
+                <tbody>
+                {game.moves.map((move) => <tr key={move.id}>
                     <td>{move.player.show()}</td>
                     <td>
                         {move.render()}
@@ -128,10 +131,13 @@ class Game extends React.Component<GameProps, GameState> {
                         </button>
                     </td>
                 </tr>)}
-                <tr className="current">
-                    <td>{this.state.player.show()}</td>
-                    <td>{this.render_current_move()}</td>
-                </tr>
+                </tbody>
+                    <tfoot>
+                    <tr className="current">
+                        <td>{this.state.player.show()}</td>
+                        <td>{this.render_current_move()}</td>
+                    </tr>
+                </tfoot>
             </table>
         </div>;
     }

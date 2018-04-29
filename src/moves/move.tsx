@@ -4,13 +4,17 @@ import {ReactNode} from "react";
 import {Player} from "../model/player";
 import {Game} from "../model/game";
 
+let move_id_counter = 0;
+
 export class Move{
     game: Game;
     player: Player;
+    id: number;
 
     constructor(game: Game, player: Player){
         this.game = game;
         this.player = player;
+        this.id = move_id_counter++;
     }
 
     execute(){

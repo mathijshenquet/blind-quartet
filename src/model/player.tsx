@@ -88,7 +88,7 @@ export class Player extends Entity<PlayerState> implements Entity<PlayerState> {
             ? <button className="select btn btn-xs btn-default" onClick={() => app.setState({target: player})}>Select</button>
             : "";
 
-        return <li>
+        return <li key={this.id}>
             <span className={player==state.player ? "turn" : ""}>{player.show(app)}</span>&nbsp;
             <span className="info">(free: {player.free_cards}, hand: {player.hand_cards}, quartets: {player.quartets})</span>&nbsp;
             {select_button}
@@ -98,7 +98,7 @@ export class Player extends Entity<PlayerState> implements Entity<PlayerState> {
     render_multiplicity(category: Category) {
         let count = category.multiplicity(this);
         if(count == 0) return null;
-        if(count == 1) return <span className="count">{this.show()}</span>;
-        return <span className="count">{count}x{this.show()}</span>;
+        if(count == 1) return <span className="count" key={this.id}>{this.show()}</span>;
+        return <span className="count" key={this.id}>{count}x{this.show()}</span>;
     }
 }
