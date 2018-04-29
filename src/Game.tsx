@@ -98,11 +98,7 @@ class Game extends React.Component<GameProps, GameState> {
         }
 
         let refresh: ReactElement<any> =
-            <p>Refresh?
-                <button className="btn btn-default btn-xs"
-                        onClick={this.tick.bind(this)}>
-                    execute
-                </button>
+            <p>Refresh? <button className="btn btn-default btn-xs" onClick={this.tick.bind(this)}>execute</button>
             </p>;
 
         return <div style={{borderColor: "darkgray"}} className="category">
@@ -127,7 +123,7 @@ class Game extends React.Component<GameProps, GameState> {
                     <td>
                         {move.render()}
                         <button onClick={this.undo_until.bind(this, move)}
-                                className="float-right btn btn-xs btn-danger">
+                                className="select float-right btn btn-xs btn-danger">
                             undo
                         </button>
                     </td>

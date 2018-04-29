@@ -93,6 +93,10 @@ h3 {
     margin-right: 1.5em;
 }
 
+#log{
+    width: 100%;
+}
+
 #log li{
     padding: 0.4em 0;
     border-bottom: 1px solid darkgray;
