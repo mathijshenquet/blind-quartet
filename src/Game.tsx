@@ -5,6 +5,7 @@ import {Card} from "./model/card";
 import {Player} from "./model/player";
 import {Category} from "./model/category";
 import {MoveAsk, MoveButton, MoveQuartet, MoveResponse} from "./moves";
+import {ReactElement} from "react";
 
 interface GameState {
     player: Player;
@@ -33,6 +34,24 @@ class Game extends React.Component<GameProps, GameState> {
         this.setState(game.next_action());
     }
 
+    private forcePlayer(){
+        this.props.game.next_player(this.state.player);
+        this.tick({target: null, card: null, category: null});
+    }
+
+    render_admin(): ReactElement<any> {
+        let changeTurn: string | ReactElement<any> = "";
+        if(this.state.target){
+            let player = this.state.target;
+            changeTurn = <p>Change turn to {player.show()}? <button className="btn btn-danger btn-xs" onClick={this.forcePlayer.bind(this)}>execute</button></p>
+        }
+
+        return <div style={{borderColor: "darkgray"}} className="category">
+            <h3 style={{color: "darkgray"}}>Admin</h3>
+            {changeTurn}
+        </div>;
+    }
+
     public render() {
         let game = this.props.game;
 
@@ -43,6 +62,7 @@ class Game extends React.Component<GameProps, GameState> {
             </div>
             <div id="categories">
                 {game.categories.map((cat) => cat.render(this))}
+                {this.render_admin()}
             </div>
             {this.render_actions()}
         </div>;
