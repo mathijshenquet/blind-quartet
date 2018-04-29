@@ -4,14 +4,26 @@ import {Category} from "./category";
 import {Result} from "./result";
 import {Card} from "./card";
 
+export enum TurnProgression {
+    Circle,
+    Asked
+}
+
+export interface GameOptions{
+    turn_progression: TurnProgression,
+    player_count: number,
+}
+
 export class Game{
+    turn_progression: TurnProgression;
+    length: number;
+
     players: Array<Player>;
     categories: Array<Category>;
 
     moves: Array<Move>;
     turn: Player;
     turns: Array<Player>;
-    length: number;
 
     get last_move(): Move | undefined {
         let l = this.moves.length;
@@ -21,15 +33,17 @@ export class Game{
         return;
     }
 
-    constructor(player_count: number){
+    constructor(options: GameOptions){
+        this.turn_progression = options.turn_progression;
+        this.length = options.player_count;
+
         this.players = [];
         this.categories = [];
-        this.length = player_count;
-        for(let player_id = 0; player_id < player_count; player_id++){
+        for(let player_id = 0; player_id < this.length; player_id++){
             this.players.push(new Player(player_id, this));
         }
 
-        for(let category_id = 0; category_id < player_count; category_id++){
+        for(let category_id = 0; category_id < this.length; category_id++){
             this.categories.push(new Category(category_id, this));
         }
 
@@ -42,9 +56,10 @@ export class Game{
         return this.players[id];
     }
 
+    // if a player is set, this is the player who was asked a card before
     next_player(player?: Player) {
-        if(player == undefined) {
-            const next_id = (this.turn.id + 1) % this.players.length;
+        if(this.turn_progression == TurnProgression.Circle || player == undefined) {
+            let next_id = (this.turn.id + 1) % this.players.length;
             player = this.get_player(next_id);
         }
 

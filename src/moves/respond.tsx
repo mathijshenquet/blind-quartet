@@ -27,7 +27,7 @@ export class MoveResponse extends Move {
             this.card.transfer(this.source);
         }else{
             this.card.exclude(this.player);
-            this.game.next_player();
+            this.game.next_player(this.player);
         }
     }
 

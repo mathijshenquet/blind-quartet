@@ -1,20 +1,22 @@
-import {Game} from "./model/game";
+import {Game, TurnProgression} from "./model/game";
 import * as React from "react";
 import GameView from "./Game";
+import {ToggleButton, ToggleButtonGroup} from "react-bootstrap";
 
 interface AppState {
     game: Game | null,
     showInfo: boolean,
+    turn_progression: TurnProgression
 }
 
 export class App extends React.Component<any, AppState> {
     constructor(props: any){
         super(props);
-        this.state = {game: null, showInfo: false};
+        this.state = {game: null, showInfo: false, turn_progression: TurnProgression.Circle};
     }
 
     startGame(length: number){
-        this.setState({game: new Game(length)});
+        this.setState({game: new Game({player_count: length, turn_progression: this.state.turn_progression})});
     }
 
     render(){
@@ -60,6 +62,10 @@ export class App extends React.Component<any, AppState> {
                 <p>The single important most important rule in the game is <b>'everything still possible is allowed'</b>.</p>
 
                 <h2>Start game</h2>
+                <p>Turn progression <ToggleButtonGroup type="radio" name="options" value={this.state.turn_progression}>
+                    <ToggleButton value={TurnProgression.Circle} onClick={() => this.setState({turn_progression: TurnProgression.Circle})}>Circle</ToggleButton>
+                    <ToggleButton value={TurnProgression.Asked} onClick={() => this.setState({turn_progression: TurnProgression.Asked})}>Asked</ToggleButton>
+                </ToggleButtonGroup></p>
                 <p>Start a game with: {picks}</p>
             </div>;
         }else{

@@ -65,7 +65,7 @@ class Game extends React.Component<GameProps, GameState> {
     }
 
     private forcePlayer(){
-        this.props.game.next_player(this.state.player);
+        this.props.game.turn = this.state.player;
         this.tick();
     }
 
