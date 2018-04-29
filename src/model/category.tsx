@@ -12,7 +12,7 @@ interface CategoryState {
     completed: boolean;
 }
 
-let colors = ["red", "blue", "green", "goldenrod", "purple"];
+let colors = ["red", "darkcyan", "green", "darkgoldenrod", "purple", "darkblue"];
 
 export class Category extends Entity<CategoryState> implements Entity<CategoryState> {
     game: Game;
@@ -27,7 +27,6 @@ export class Category extends Entity<CategoryState> implements Entity<CategorySt
             this.cards.push(new Card(this, i));
         }
     }
-
 
     get_kind(): string{
         return "Category";
