@@ -3,17 +3,23 @@ import {Move} from "../moves";
 import {Category} from "./category";
 import {Result} from "./result";
 import {Card} from "./card";
-import {MoveAsk} from "../moves/ask";
 
 export class Game{
     players: Array<Player>;
     categories: Array<Category>;
 
     moves: Array<Move>;
-    last_move?: Move;
     turn: Player;
     turns: Array<Player>;
     length: number;
+
+    get last_move(): Move | undefined {
+        let l = this.moves.length;
+        if(l > 0){
+            return this.moves[l-1];
+        }
+        return;
+    }
 
     constructor(player_count: number){
         this.players = [];
@@ -70,17 +76,12 @@ export class Game{
     log_move(move: Move){
         this.push_state();
         this.moves.push(move);
-        this.last_move = move;
     }
 
-    next_action(): {type: "move" | "response", player: Player} {
-        this.consistent();
-
-        let last_move = this.last_move;
-        if(last_move && last_move instanceof MoveAsk){
-            return {type: "response", player: last_move.target};
-        }
-        return {type: "move", player: this.turn};
+    undo_until(move: Move){
+        do{
+            this.pop_state();
+        }while(this.moves.pop() != move);
     }
 
     empty_pattern(): PlayerPattern {

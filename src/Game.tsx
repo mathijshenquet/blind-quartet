@@ -4,7 +4,7 @@ import {Game as GameModel} from "./model/game";
 import {Card} from "./model/card";
 import {Player} from "./model/player";
 import {Category} from "./model/category";
-import {MoveAsk, MoveButton, MoveQuartet, MoveResponse} from "./moves";
+import {Move, MoveAsk, MoveButton, MoveQuartet, MoveResponse} from "./moves";
 import {ReactElement} from "react";
 
 interface GameState {
@@ -15,6 +15,15 @@ interface GameState {
     card: null | Card;
 }
 
+interface PartialGameState{
+    target?: Player | null,
+    category?: Category | null,
+    card?: Card | null
+}
+
+const emptyPartialState: {target: null, category: null, card: null}
+    = {target: null, category: null, card: null}
+
 interface GameProps {
     game: GameModel
 }
@@ -22,34 +31,47 @@ interface GameProps {
 class Game extends React.Component<GameProps, GameState> {
     constructor(props: GameProps){
         super(props);
-
-        this.state = Object.assign({}, props.game.next_action(),
-            {category: null, target: null, card: null});
+        this.state = Object.assign({}, this.computeState(), emptyPartialState);
     }
 
-    private tick(stateUpdate: any) {
+    private computeState(): any{
         let game = this.props.game;
+        game.consistent();
 
-        this.setState(stateUpdate);
-        this.setState(game.next_action());
+        let last_move = game.last_move;
+        if(last_move && last_move instanceof MoveAsk){
+            return {
+                type: "response",
+                player: last_move.target,
+                card: last_move.card,
+                target: last_move.target,
+                category: null
+            };
+        }else {
+            return {
+                type: "move",
+                player: game.turn,
+            };
+        }
+    }
+
+    private tick(stateUpdate?: PartialGameState) {
+        if(stateUpdate) {
+            this.setState(stateUpdate as any);
+        }else{
+            this.setState(emptyPartialState);
+        }
+        this.setState(this.computeState());
     }
 
     private forcePlayer(){
         this.props.game.next_player(this.state.player);
-        this.tick({target: null, card: null, category: null});
+        this.tick();
     }
 
-    render_admin(): ReactElement<any> {
-        let changeTurn: string | ReactElement<any> = "";
-        if(this.state.target){
-            let player = this.state.target;
-            changeTurn = <p>Change turn to {player.show()}? <button className="btn btn-danger btn-xs" onClick={this.forcePlayer.bind(this)}>execute</button></p>
-        }
-
-        return <div style={{borderColor: "darkgray"}} className="category">
-            <h3 style={{color: "darkgray"}}>Admin</h3>
-            {changeTurn}
-        </div>;
+    private undo_until(move: Move){
+        this.props.game.undo_until(move);
+        this.tick();
     }
 
     public render() {
@@ -68,6 +90,28 @@ class Game extends React.Component<GameProps, GameState> {
         </div>;
     }
 
+    render_admin(): ReactElement<any> {
+        let changeTurn: string | ReactElement<any> = "";
+        if(this.state.target){
+            let player = this.state.target;
+            changeTurn = <p>Change turn to {player.show()}? <button className="btn btn-danger btn-xs" onClick={this.forcePlayer.bind(this)}>execute</button></p>
+        }
+
+        let refresh: ReactElement<any> =
+            <p>Refresh?
+                <button className="btn btn-default btn-xs"
+                        onClick={this.tick.bind(this)}>
+                    execute
+                </button>
+            </p>;
+
+        return <div style={{borderColor: "darkgray"}} className="category">
+            <h3 style={{color: "darkgray"}}>Admin</h3>
+            {changeTurn}
+            {refresh}
+        </div>;
+    }
+
     render_actions(){
         let game = this.props.game;
 
@@ -80,7 +124,13 @@ class Game extends React.Component<GameProps, GameState> {
                 </tr>
                 {game.moves.map((move) => <tr>
                     <td>{move.player.show()}</td>
-                    <td>{move.render()}</td>
+                    <td>
+                        {move.render()}
+                        <button onClick={this.undo_until.bind(this, move)}
+                                className="float-right btn btn-xs btn-danger">
+                            undo
+                        </button>
+                    </td>
                 </tr>)}
                 <tr className="current">
                     <td>{this.state.player.show()}</td>
@@ -138,7 +188,6 @@ class Game extends React.Component<GameProps, GameState> {
             return parts;
         }
     }
-
 }
 
 export default Game;
