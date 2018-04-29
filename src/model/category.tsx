@@ -54,9 +54,14 @@ export class Category extends Entity<CategoryState> implements Entity<CategorySt
             || (player != undefined && this.state.reserved == player.bit_pattern());
     }
 
-    multiplicity(player: Player): number {
-        let count = this.is_reserved(player) ? 1 : 0;
-        return count + this.cards.filter((card) => card.owner == player).length;
+    multiplicity(player?: Player): number {
+        if(player) {
+            let count = this.is_reserved(player) ? 1 : 0;
+            return count + this.cards.filter((card) => card.owner == player).length;
+        }else{
+            let count = this.game.players.filter((player) => this.is_reserved(player)).length;
+            return count + this.cards.filter((card) => card.owner != null).length;
+        }
     }
 
     reserve(player: Player){
@@ -109,10 +114,11 @@ export class Category extends Entity<CategoryState> implements Entity<CategorySt
         return consistent;
     }
 
+    // given that the player is not jet playing in this category, is there a
+    // way for him to play in this category?
     can_have_player(player: Player): boolean {
-        return this.cards.some((card) => card.can_be_claimed_by(player));
+        return this.multiplicity() < 4 && this.cards.some((card) => card.can_be_claimed_by(player));
     }
-
 
     render(app: GameView){
         let color = colors[this.id];
