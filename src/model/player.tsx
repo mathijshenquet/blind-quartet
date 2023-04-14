@@ -1,6 +1,6 @@
 import {Game} from "./game";
 import {Category} from "./category";
-import {PlayerPattern} from "./player";
+// import {PlayerPattern} from "./player";
 import {Entity} from "./entity";
 import * as React from "react";
 import GameView from "../Game";
